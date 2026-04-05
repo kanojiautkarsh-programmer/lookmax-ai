@@ -1,5 +1,7 @@
 # Looksmaxing AI
 
+**Live Demo:** https://lookmax-ai.pages.dev
+
 AI-powered appearance analysis app for teens. Analyze photos, get personalized tips, and track your progress.
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black)
