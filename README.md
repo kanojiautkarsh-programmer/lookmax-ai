@@ -96,7 +96,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 4. Select your repository
 5. Set build settings:
    - **Build command**: `npm run build`
-   - **Build output directory**: `.next`
+   - **Build output directory**: `out`
 6. Add environment variables in Settings
 7. Deploy!
 
