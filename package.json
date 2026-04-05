@@ -1,0 +1,12 @@
+{
+  "name": "lookmax-ai",
+  "version": "1.0.0",
+  "description": "Privacy-first AI face analysis web app",
+  "scripts": {
+    "deploy": "wrangler pages deploy . --project-name=lookmax-ai",
+    "deploy:worker": "cd worker && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
