@@ -10,7 +10,7 @@ import {
 } from "./ui/card";
 import { ScoreGauge, ScoreBar } from "./ScoreGauge";
 import { 
-  FaceIcon, 
+  UserIcon, 
   DropletIcon, 
   ScissorsIcon, 
   ShirtIcon,
@@ -48,7 +48,7 @@ export function AnalysisCard({ analysis, className }: AnalysisCardProps) {
           <ScoreBar
             label="Face"
             score={scores.face}
-            icon={<FaceIcon className="h-4 w-4" />}
+            icon={<UserIcon className="h-4 w-4" />}
           />
           <ScoreBar
             label="Skin"

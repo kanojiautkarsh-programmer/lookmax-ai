@@ -9,10 +9,11 @@ import { analyzePhotoWithGroq } from "./groq";
 import { analyzeWithCloudflare } from "./cloudflare";
 
 function parseScoreFromText(text: string, category: string): number {
+  const escapedCategory = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const patterns = [
-    new RegExp(`${category}[^0-9]*([0-9]+(?:\\.[0-9])?)`, "i"),
-    new RegExp(`(${category})[^:]*:\\s*([0-9]+(?:\\.[0-9])?)`, "i"),
-    new RegExp(`([0-9]+(?:\\.[0-9])?)\\s*(?:/|out of|\\/10)\\s*${category}`, "i"),
+    new RegExp(`${escapedCategory}[^0-9]*([0-9]+(?:\\.[0-9])?)`, "i"),
+    new RegExp(`(${escapedCategory})[^:]*:\\s*([0-9]+(?:\\.[0-9])?)`, "i"),
+    new RegExp(`([0-9]+(?:\\.[0-9])?)\\s*(?:/|out of|/10)\\s*${escapedCategory}`, "i"),
   ];
 
   for (const pattern of patterns) {
@@ -32,7 +33,6 @@ function parseOverallScore(text: string): number {
     /score[^0-9]*([0-9]+(?:\.[0-9])?)/i,
     /attractiveness[^0-9]*([0-9]+(?:\.[0-9])?)/i,
     /rating[^0-9]*([0-9]+(?:\.[0-9])?)/i,
-    /([0-9]+(?:\.[0-9])?)\s*(?:\/|out of|\\/10)/i,
   ];
 
   for (const pattern of patterns) {
