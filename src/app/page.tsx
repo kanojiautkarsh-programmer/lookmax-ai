@@ -9,26 +9,31 @@ import {
   TrendingUpIcon,
   ShieldCheckIcon,
   ZapIcon,
-  ArrowRightIcon,
   StarIcon,
   HeartIcon,
-  UsersIcon
+  UsersIcon,
+  ExternalLinkIcon,
+  ShareIcon,
+  HomeIcon,
+  CalendarIcon,
+  XIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ProgressTracker, PhotoUploader, ChatInterface, LoadingOverlay } from "@/components";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ProgressTracker, PhotoUploader, ChatInterface, LoadingOverlay, AnalysisCard } from "@/components";
 import { performAnalysis } from "@/lib/ai";
 import { addAnalysis, getProgress, addChatMessage } from "@/lib/storage";
 import { getChatAdvice } from "@/lib/ai";
-import { AnalysisResult, ChatMessage } from "@/lib/types";
+import { AnalysisResult } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = React.useState<"analyze" | "chat">("analyze");
   const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [currentAnalysis, setCurrentAnalysis] = React.useState<AnalysisResult | null>(null);
   const [progress, setProgress] = React.useState(getProgress());
   const [isChatLoading, setIsChatLoading] = React.useState(false);
+  const [showAnalysisModal, setShowAnalysisModal] = React.useState(false);
 
   React.useEffect(() => {
     const interval = setInterval(() => {
@@ -58,6 +63,7 @@ export default function HomePage() {
         detailedAnalysis: result.detailedAnalysis,
       });
       setCurrentAnalysis(saved);
+      setShowAnalysisModal(true);
       setProgress(getProgress());
     } catch (error) {
       console.error("Analysis error:", error);
@@ -91,6 +97,24 @@ export default function HomePage() {
     }
   };
 
+  const handleShare = async () => {
+    if (!currentAnalysis) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "My Looksmaxing AI Analysis",
+          text: `Check out my appearance analysis! Overall score: ${currentAnalysis.scores.overall}/10`,
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.log("Share cancelled");
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      alert("Link copied to clipboard!");
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <LoadingOverlay 
@@ -98,6 +122,111 @@ export default function HomePage() {
         message="Analyzing your appearance..."
         progress={isAnalyzing ? 75 : undefined}
       />
+
+      {showAnalysisModal && currentAnalysis && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm overflow-y-auto">
+          <div className="container mx-auto px-4 py-8 max-w-6xl">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => setShowAnalysisModal(false)}>
+                  <XIcon className="h-5 w-5" />
+                </Button>
+                <div>
+                  <h1 className="font-semibold">Analysis Result</h1>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <CalendarIcon className="h-3 w-3" />
+                    {formatDate(new Date(currentAnalysis.timestamp))}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleShare}>
+                  <ShareIcon className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+                <Button variant="outline" onClick={() => setShowAnalysisModal(false)}>
+                  <HomeIcon className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <AnalysisCard analysis={currentAnalysis} />
+
+                {currentAnalysis.detailedAnalysis && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Detailed AI Analysis</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {currentAnalysis.detailedAnalysis}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Your Photo</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <img
+                      src={currentAnalysis.imageUrl}
+                      alt="Analyzed photo"
+                      className="w-full rounded-lg"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Quick Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Face Shape</span>
+                      <span className="font-medium">{currentAnalysis.analysis.faceShape}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Skin Tone</span>
+                      <span className="font-medium">{currentAnalysis.analysis.skinTone}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Skin Condition</span>
+                      <span className="font-medium">{currentAnalysis.analysis.skinCondition}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Hair Type</span>
+                      <span className="font-medium">{currentAnalysis.analysis.hairType}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="pt-6">
+                    <div className="text-center space-y-3">
+                      <SparklesIcon className="h-8 w-8 text-primary mx-auto" />
+                      <h3 className="font-semibold">Want more tips?</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Chat with our AI advisor for personalized recommendations
+                      </p>
+                      <Button className="w-full" onClick={() => setShowAnalysisModal(false)}>
+                        <MessageCircleIcon className="h-4 w-4 mr-2" />
+                        Chat with AI
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
@@ -242,7 +371,7 @@ export default function HomePage() {
                     setCurrentAnalysis(null);
                   }}
                 />
-                {selectedImage && !currentAnalysis && (
+                {selectedImage && (
                   <Button 
                     onClick={handleAnalyze} 
                     className="w-full" 
@@ -250,19 +379,7 @@ export default function HomePage() {
                     disabled={isAnalyzing}
                   >
                     <SparklesIcon className="h-5 w-5 mr-2" />
-                    Analyze Appearance
-                  </Button>
-                )}
-                {currentAnalysis && (
-                  <Button 
-                    onClick={handleAnalyze} 
-                    className="w-full" 
-                    size="lg"
-                    disabled={isAnalyzing}
-                    variant="outline"
-                  >
-                    <SparklesIcon className="h-5 w-5 mr-2" />
-                    Re-analyze
+                    {currentAnalysis ? "Re-analyze" : "Analyze Appearance"}
                   </Button>
                 )}
               </CardContent>
@@ -270,28 +387,44 @@ export default function HomePage() {
 
             <div className="space-y-6">
               {currentAnalysis ? (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-emerald-500">
-                        {currentAnalysis.scores.overall.toFixed(1)}
-                      </span>
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <span className="text-3xl font-bold text-emerald-500">
+                          {currentAnalysis.scores.overall.toFixed(1)}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg">Analysis Complete!</h3>
+                        <p className="text-sm text-muted-foreground">Overall score</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">Analysis Complete!</h3>
-                      <p className="text-sm text-muted-foreground">Your overall score</p>
+                    <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                      <p><strong>Face:</strong> {currentAnalysis.scores.face.toFixed(1)}/10</p>
+                      <p><strong>Skin:</strong> {currentAnalysis.scores.skin.toFixed(1)}/10</p>
+                      <p><strong>Hair:</strong> {currentAnalysis.scores.hair.toFixed(1)}/10</p>
+                      <p><strong>Style:</strong> {currentAnalysis.scores.style.toFixed(1)}/10</p>
                     </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {currentAnalysis.strengths[0] || "Great analysis complete!"}
-                  </p>
-                  <Link href={`/analyze/${currentAnalysis.id}`}>
-                    <Button className="w-full mt-4 gap-2">
-                      View Full Analysis
-                      <ArrowRightIcon className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        className="flex-1" 
+                        onClick={() => setShowAnalysisModal(true)}
+                      >
+                        <ExternalLinkIcon className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleAnalyze}
+                        disabled={isAnalyzing}
+                      >
+                        <SparklesIcon className="h-4 w-4 mr-2" />
+                        Re-analyze
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ) : (
                 <Card className="h-full flex items-center justify-center">
                   <CardContent className="text-center py-12">
